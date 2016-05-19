@@ -2,12 +2,13 @@
 #define KERNEL_DENSITY1D_ESTIMATOR_H__
 
 #include <vector>
+#include <string>
 
 class kde1d{
 
 public:
 	kde1d(){};
-	kde1d(double bandwidth, std::vector<double> data);
+	kde1d(double bandwidth, std::vector<double> data, std::string kernel_type_);
 	~kde1d() = default;
 
 	void add_data(std::vector<double> data);
@@ -21,8 +22,8 @@ public:
 private:
 	double bandwidth;
 	std::vector<double> data;
-	double gauss_pdf(double x);	
-	double gradient_gauss_pdf(double x);
+	double gauss_pdf(double x);
+	std::string kernel_type;
 
 };
 

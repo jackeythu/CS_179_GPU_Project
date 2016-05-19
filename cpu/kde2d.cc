@@ -1,12 +1,13 @@
 #include <vector>
 #include <math.h>
+#include <string>
 #include <exception>
 #include "kde2d.h"
 #include "Point2d.h"
 
 #define PI 3.141592653
 
-kde2d::kde2d(double bandwidth_, std::vector<Point2d> data_){
+kde2d::kde2d(double bandwidth_, std::vector<Point2d> data_, std::string kernel_type_){
 
 	bandwidth = bandwidth_;
 	
@@ -14,7 +15,12 @@ kde2d::kde2d(double bandwidth_, std::vector<Point2d> data_){
 		throw std::domain_error("Sample data error: no sample data. ");
 	}
 
+	if(kernel_type_ != "gaussian" and kernel_type_ != "uniform" and kernel_type_ != "quartic"){
+		throw std::domain_error("Kernel error: unsupported kernel. ");
+	}	
 	for(int i = 0; i < data_.size(); ++i) data.push_back(data_[i]);
+
+	kernel_type = kernel_type_;
 }
 
 
@@ -52,7 +58,22 @@ void kde2d::set_bandwidth(double bandwidth_){
 }
 
 double kde2d::gauss_pdf(Point2d x){
-	return 1.0/(2*PI) * exp(-x.norm2() / 2.0);
+	if(kernel_type != "gaussian" and kernel_type != "uniform" and kernel_type != "quartic"){
+		throw std::domain_error("Kernel error: unsupported kernel. ");
+	}
+	else if(kernel_type == "gaussian"){
+
+		return 1.0/(2*PI) * exp(-x.norm2() / 2.0);
+	}
+	else if(kernel_type == "uniform"){
+		if(x.norm() > 1) return 0;
+		else return 1.0/2;
+	}
+	else{
+		if(x.norm() > 1) return 0;
+		else return 15.0/16 * (1-x.norm2())*(1-x.norm2());
+	}
+	
 }
 
 

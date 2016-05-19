@@ -20,7 +20,7 @@ int main(){
         sample.push_back(temp);
     }
 
-    kde2d Gauss(1.0, sample);
+    kde2d Gauss(1.0, sample, "uniform");
 
 
     // apply kde2d for estimation:

@@ -2,13 +2,14 @@
 #define KERNEL2d_DENSITY_ESTIMATOR_H__
 
 #include <vector>
+#include <string>
 #include "Point2d.h"
 
 class kde2d{
 
 public:
 	kde2d(){};
-	kde2d(double bandwidth, std::vector<Point2d> data);
+	kde2d(double bandwidth, std::vector<Point2d> data, std::string kernel_type_);
 	~kde2d() = default;
 
 	void add_data(std::vector<Point2d> data);
@@ -23,7 +24,7 @@ public:
 private:
 	double bandwidth;
 	std::vector<Point2d> data;
-
+	std::string kernel_type;
 	double gauss_pdf(Point2d x);
 
 };

@@ -35,7 +35,7 @@ int main(){
     // apply kde1d for estimation:
 
     double bandwidth = 0.8;
-    kde1d Gauss(bandwidth, sample);
+    kde1d Gauss(bandwidth, sample, "quartic");
 
     int N = 10000;
     vector<double> input;
