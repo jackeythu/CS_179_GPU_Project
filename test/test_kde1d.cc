@@ -61,7 +61,7 @@ int main(){
     ofstream outfile;
     outfile.open("../data/kde1d_gauss1d_single.csv");
     for(int i = 0; i < result.size(); ++i){
-        outfile << result[i];
+        outfile << input[i] << ',' << result[i];
         outfile << "\n";
     }
 

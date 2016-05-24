@@ -12,7 +12,7 @@ int main(){
     // input sample data:
     vector<Point2d> sample;
     ifstream intputfile;
-    intputfile.open("../data/gauss2d_double.csv");
+    intputfile.open("../data/gaussian2d.csv");
     double x;
     double y;
     while(intputfile>>x>>y){
@@ -27,13 +27,13 @@ int main(){
     vector<Point2d> intput;
     for(int i = 0; i < 100; ++i){
         for(int j = 0; j < 100; ++j){
-            Point2d temp((i-50)*1.0/50+1.5,(j-50)*1.0/50+2.5);
+            Point2d temp((i-50)*3.0/50,(j-50)*4.0/50);
             intput.push_back(temp);
         }
     }
 
     ofstream outfile;
-    outfile.open("../data/kde2d_gauss2d_double.csv");
+    outfile.open("../data/kde2d_gaussian2d.csv");
     for(int i = 0; i < intput.size(); ++i){
         outfile << intput[i].x() << ',' << intput[i].y() << ',' << Gauss.pdf(intput[i]);
         outfile << "\n";
