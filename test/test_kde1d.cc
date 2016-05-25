@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <exception>
 #include "../cpu/kde1d.h"
 
 using namespace std;
@@ -15,12 +16,27 @@ void PrintVector(vector<double> x){
     return;
 }
 
-int main(){
-	
+int main(int argc, char* argv[]){
+
+	// Input sample data, kernel_type, naive/adaptive
+    if(argc != 4){
+        printf("Usage: <sample_data_path> <kernel_type:gaussian/uniform/quartic> <naive/adaptive>\n");
+        exit(-1);
+    }
+
+    std::string path(argv[1]);
+    std::string kernel_type(argv[2]);
+    std::string version_type(argv[3]);
+    bool version;
+    if(version_type == "naive"){
+        version = false;
+    }
+    else version = true;
+
     // input sample data:
 
 	ifstream myfile;
-	myfile.open("../data/gauss1d_single.csv");
+	myfile.open(path);
 	myfile.is_open() ? cout << "open data file successfully" : cout << "Error: Cannot open data file!";
 	cout << endl;
 
@@ -35,7 +51,7 @@ int main(){
     // apply kde1d for estimation:
 
     double bandwidth = 0.8;
-    kde1d Gauss(bandwidth, sample, "gaussian", true);
+    kde1d Gauss(bandwidth, sample, "gaussian", version);
 
     int N = 10000;
     vector<double> input;
