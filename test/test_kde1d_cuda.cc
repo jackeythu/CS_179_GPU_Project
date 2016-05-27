@@ -17,12 +17,9 @@ using namespace std;
 #define gaussian 1
 #define quartic 2
 
-void kde1d_cuda_naive(int threadsPerBlock, int max_Number_of_block, float* sample, int len_sample, float* input_host, float* output_host, int len_data, float bandwidth, int kernel_type){
 
-    //input data
-    //observation data is stored in data, and then copied to data_host
-    //predicted data is created in input, and then copied to output_host. output_host is to store Prob(i) further.
-    //which means, x-axis is input, and y-axis is output_host
+// This function deals with one dimensional naive KDE based on CUDA.
+void kde1d_cuda_naive(int threadsPerBlock, int max_Number_of_block, float* sample, int len_sample, float* input_host, float* output_host, int len_data, float bandwidth, int kernel_type){
 
     float* dev_sample;
     float* dev_input;
@@ -42,9 +39,45 @@ void kde1d_cuda_naive(int threadsPerBlock, int max_Number_of_block, float* sampl
     cudaMemcpy(output_host, dev_output, len_data * sizeof(float), cudaMemcpyDeviceToHost);
     time_final = clock();
 
-    cout << "cost time is " << (time_final - time_initial)/CLOCKS_PER_SEC << endl;
+    cout << "naive cost time is " << (time_final - time_initial)/CLOCKS_PER_SEC << endl;
 
 }
+
+// This function deals with one dimensional adaptive KDE based on CUDA.
+// Adaptive KDE needs naive version as adaptive bandwidth factor.
+void kde1d_cuda_adaptive(int threadsPerBlock, int max_Number_of_block, float* sample, int len_sample, float* input_host, float* output_host, int len_data, float bandwidth_naive, float bandwidth_adaptive, int kernel_type){
+    
+    // use naive version to obtain pilot estimate
+    float* estimate_sample = new float[len_sample];
+    kde1d_cuda_naive(threadsPerBlock, max_Number_of_block, sample, len_sample, sample, estimate_sample, len_sample, bandwidth_naive, kernel_type);
+
+    float* dev_sample;
+    float* dev_estimate_sample;
+    float* dev_input;
+    float* dev_output;
+
+    float time_initial, time_final;
+    time_initial = clock();
+
+    cudaMalloc((void**) &dev_sample, len_sample * sizeof(float));
+    cudaMemcpy(dev_sample, sample, len_sample * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &dev_estimate_sample, len_sample * sizeof(float));
+    cudaMemcpy(dev_estimate_sample, estimate_sample, len_sample * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &dev_input, len_data * sizeof(float));
+    cudaMemcpy(dev_input, input_host, len_data * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &dev_output, len_data * sizeof(float));
+    cudaMemcpy(dev_output, output_host, len_data * sizeof(float), cudaMemcpyHostToDevice);
+
+    CallKDEadaptiveKernel(threadsPerBlock, max_Number_of_block, dev_sample, dev_estimate_sample, dev_input, dev_output, len_sample, len_data, bandwidth_adaptive, kernel_type);
+    cudaMemcpy(output_host, dev_output, len_data * sizeof(float), cudaMemcpyDeviceToHost);
+
+    time_final = clock();
+
+    cout << "adaptive cost time is " << (time_final - time_initial)/CLOCKS_PER_SEC << endl;
+
+}
+
+
 
 
 int main(int argc, char* argv[]){
@@ -112,11 +145,11 @@ int main(int argc, char* argv[]){
 
 
     // Call kde functions
-    kde1d_cuda_naive(threadsPerBlock, max_Number_of_block, sample, len_sample, input_host, output_host, len_data, 1.0, kernel_type);
+    kde1d_cuda_adaptive(threadsPerBlock, max_Number_of_block, sample, len_sample, input_host, output_host, len_data, 1.0, 1.0, kernel_type);
 
     //output data to file
     ofstream outfile2;
-    outfile2.open("../data/kde1d_cuda_output.csv");
+    outfile2.open("../data/kde1d_cuda_output_adaptive.csv");
     for(int i = 0; i < len_data; ++i){
         outfile2 << input_host[i] << "," << output_host[i];
         outfile2 << "\n";

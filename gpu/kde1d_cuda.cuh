@@ -4,4 +4,5 @@
 
 void CallKDEKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_block, float* dev_sample, float* dev_input, float* dev_output, int len_sample, int len_data, float bandwidth, int kernel_type);
 
+void CallKDEadaptiveKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_block, float* dev_sample, float* dev_estimate_sample, float* dev_input, float* dev_output, int len_sample, int len_data, float bandwidth, int kernel_type);
 #endif
