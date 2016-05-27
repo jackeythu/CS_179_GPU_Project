@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cuda_runtime.h>
-#include "kde_cuda.cuh"
+#include "kde1d_cuda.cuh"
 
 #define PI 3.141592653
 
@@ -33,16 +33,15 @@ __device__ float kernel(float data, int kernel_type){
 }
 
 
-
 __global__
-void KDEkernel(float* dev_data, float* dev_output, int len_data, int len_input, int bandwidth, int kernel_type){
+void KDEkernel(float* dev_sample, float* dev_input, float* dev_output, int len_sample, int len_data, int bandwidth, int kernel_type){
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	while(idx < len_input){
+	while(idx < len_data){
 		float sum_ker = 0;
-		for(int i = 0; i < len_data; ++i){
-			sum_ker += kernel((dev_output[idx]-dev_data[i])/bandwidth, kernel_type) / bandwidth;
+		for(int i = 0; i < len_sample; ++i){
+			sum_ker += kernel((dev_input[idx]-dev_sample[i])/bandwidth, kernel_type) / bandwidth;
 		}
-		dev_output[idx] = sum_ker/len_data;
+		dev_output[idx] = sum_ker/len_sample;
 		
 		idx += blockDim.x * gridDim.x;
 	}
@@ -50,7 +49,8 @@ void KDEkernel(float* dev_data, float* dev_output, int len_data, int len_input, 
 
 
 
-
-void CallKDEKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_block, float* dev_data, float* dev_output, int len_data, int len_input, float bandwidth, int kernel_type){
-	KDEkernel<<<max_Number_of_block, threadsPerBlock>>>(dev_data, dev_output, len_data, len_input, bandwidth, kernel_type);
+void CallKDEKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_block, float* dev_sample, float* dev_input, float* dev_output, int len_sample, int len_data, float bandwidth, int kernel_type){
+	KDEkernel<<<max_Number_of_block, threadsPerBlock>>>(dev_sample, dev_input, dev_output, len_sample, len_data, bandwidth, kernel_type);
 }
+
+

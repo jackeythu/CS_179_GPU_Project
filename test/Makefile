@@ -39,10 +39,10 @@ TARGETS = kde_gpu
 
 all: $(TARGETS)
 
-kde_gpu: kde_1d.cc kde_cuda.o
+kde_gpu: test_kde1d_cuda.cc kde_cuda.o
 	$(CC) $^ -o $@ -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
 
-kde_cuda.o: kde_cuda.cu
+kde_cuda.o: kde1d_cuda.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 
