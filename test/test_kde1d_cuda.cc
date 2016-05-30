@@ -47,10 +47,10 @@ void kde1d_cuda_naive(int threadsPerBlock, int max_Number_of_block, float* sampl
 // Adaptive KDE needs naive version as adaptive bandwidth factor.
 void kde1d_cuda_adaptive(int threadsPerBlock, int max_Number_of_block, float* sample, int len_sample, float* input_host, float* output_host, int len_data, float bandwidth_naive, float bandwidth_adaptive, int kernel_type){
     
-    // use naive version to obtain pilot estimate
-    float* estimate_sample = new float[len_sample];
-    kde1d_cuda_naive(threadsPerBlock, max_Number_of_block, sample, len_sample, sample, estimate_sample, len_sample, bandwidth_naive, kernel_type);
+    // Use naive version to obtain pilot estimate
+    // In order to overcome multiple I/O, we keep sample and estimated_sample in device memory.
 
+    //float* estimate_sample = new float[len_sample];
     float* dev_sample;
     float* dev_estimate_sample;
     float* dev_input;
@@ -61,12 +61,21 @@ void kde1d_cuda_adaptive(int threadsPerBlock, int max_Number_of_block, float* sa
 
     cudaMalloc((void**) &dev_sample, len_sample * sizeof(float));
     cudaMemcpy(dev_sample, sample, len_sample * sizeof(float), cudaMemcpyHostToDevice);
+
     cudaMalloc((void**) &dev_estimate_sample, len_sample * sizeof(float));
-    cudaMemcpy(dev_estimate_sample, estimate_sample, len_sample * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemset(dev_estimate_sample, 0, len_sample * sizeof(float));
+
     cudaMalloc((void**) &dev_input, len_data * sizeof(float));
     cudaMemcpy(dev_input, input_host, len_data * sizeof(float), cudaMemcpyHostToDevice);
+
     cudaMalloc((void**) &dev_output, len_data * sizeof(float));
     cudaMemcpy(dev_output, output_host, len_data * sizeof(float), cudaMemcpyHostToDevice);
+
+
+    // Use naive version to estimate pilot probability
+    CallKDEKernel(threadsPerBlock, max_Number_of_block, dev_sample, dev_sample, dev_estimate_sample, len_sample, len_sample, bandwidth_naive, kernel_type);
+ 	
+ 	// Use adaptive version to get result
 
     CallKDEadaptiveKernel(threadsPerBlock, max_Number_of_block, dev_sample, dev_estimate_sample, dev_input, dev_output, len_sample, len_data, bandwidth_adaptive, kernel_type);
     cudaMemcpy(output_host, dev_output, len_data * sizeof(float), cudaMemcpyDeviceToHost);
@@ -129,7 +138,7 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < len_sample; ++i){
         sample[i] = sample_[i];
     }
-
+    cout << "input data successfully" << endl;
 
 
     // Create and initialize input_host and output_host, the former is to give range of estimated points,
