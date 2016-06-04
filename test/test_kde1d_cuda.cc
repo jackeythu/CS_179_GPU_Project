@@ -9,7 +9,7 @@
 
 #include <cuda_runtime.h>
 #include <algorithm>
-#include "kde1d_cuda.cuh"
+#include "../gpu/kde1d_cuda.cuh"
 
 using namespace std;
 
@@ -92,17 +92,18 @@ void kde1d_cuda_adaptive(int threadsPerBlock, int max_Number_of_block, float* sa
 int main(int argc, char* argv[]){
 
     if(argc != 8){
-        printf("Usage: <threads per block> <max number of blocks> <sample file path> <kernel_type:uniform/gaussian/quartic> <range_min> <range_max> <output length>\n");
+        printf("Usage: <max number of blocks> <sample file path> <kernel_type:uniform/gaussian/quartic> <range_min> <range_max> <output length> <kde version:0(naive)/1(adaptive)>\n");
         exit(-1);
     }
 
-    int threadsPerBlock = atoi(argv[1]);
-    int max_Number_of_block = atoi(argv[2]);
+    int threadsPerBlock = 1024;
+    int max_Number_of_block = atoi(argv[1]);
     //std::string sample_path(argv[3]);
-    std::string kernel_type_(argv[4]);
-    int range_min = atoi(argv[5]);
-    int range_max = atoi(argv[6]);
-    int len_data = atoi(argv[7]);
+    std::string kernel_type_(argv[3]);
+    int range_min = atoi(argv[4]);
+    int range_max = atoi(argv[5]);
+    int len_data = atoi(argv[6]);
+    int kernel_version = atoi(argv[7]);
 
     int kernel_type;
     if(kernel_type_ != "uniform" and kernel_type_ != "gaussian" and kernel_type_ != "quartic"){
@@ -123,7 +124,7 @@ int main(int argc, char* argv[]){
 
     // Input sample data from file and store in vector
 	ifstream myfile;
-	myfile.open(argv[3]);
+	myfile.open(argv[2]);
 	myfile.is_open() ? cout << "open data file successfully" : cout << "Error: Cannot open data file!";
 	cout << endl;
 
@@ -154,14 +155,22 @@ int main(int argc, char* argv[]){
 
 
     // Call kde functions
+    if(kernel_version == 0){
+        kde1d_cuda_naive(threadsPerBlock, max_Number_of_block, sample, len_sample, input_host, output_host, len_data, 1.0, kernel_type);
+    }
+    else if(kernel_version == 1){
     kde1d_cuda_adaptive(threadsPerBlock, max_Number_of_block, sample, len_sample, input_host, output_host, len_data, 1.0, 1.0, kernel_type);
-
+    }
+    else;
+    
     //output data to file
     ofstream outfile2;
-    outfile2.open("../data/kde1d_cuda_output_adaptive.csv");
+    outfile2.open("../data/kde1d_cuda_result.csv");
     for(int i = 0; i < len_data; ++i){
         outfile2 << input_host[i] << "," << output_host[i];
         outfile2 << "\n";
     }
+
+    cout << "the output has been stored in ../data/kde1d_cuda_result.csv"<<endl;
     return 0;
 }

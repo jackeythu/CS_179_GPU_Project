@@ -1,4 +1,4 @@
-CC = /usr/bin/g++
+CC = /usr/bin/g++ -std=c++11
 
 LD_FLAGS = -lrt
 
@@ -39,13 +39,13 @@ TARGETS = kde_gpu
 
 all: $(TARGETS)
 
-kde_gpu: test_kde2d_cuda.cc Point2d.o kde_cuda.o
+kde_gpu: test_kde2d_cuda.cc ../cpu/Point2d.o kde_cuda.o
 	$(CC) $^ -o $@ -O3 $(LDFLAGS) -Wall -I$(CUDA_INC_PATH)
 
-Point2d.o: Point2d.cc    
+Point2d.o: ../cpu/Point2d.cc    
     g++ -std=c++11 Point2d.cc -o Point2d.o
 
-kde_cuda.o: kde2d_cuda.cu
+kde_cuda.o: ../gpu/kde2d_cuda.cu
 	$(NVCC) $(NVCCFLAGS) -O3 $(EXTRA_NVCCFLAGS) $(GENCODE_FLAGS) -I$(CUDA_INC_PATH) -o $@ -c $<
 
 

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <string>
 #include <exception>
+#include <stdexcept>
 #include "kde2d.h"
 #include "Point2d.h"
 

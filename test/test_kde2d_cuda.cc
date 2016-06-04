@@ -10,17 +10,24 @@
 #include <cuda_runtime.h>
 #include <algorithm>
 #include "../gpu/kde2d_cuda.cuh"
-#include "Point2d.h"
+#include "../cpu/Point2d.h"
 
 using namespace std;
 
 
-int main(){
+int main(int argc, char* argv[]){
     
+    if(argc != 3){
+        printf("Usage: <max number of blocks> <sample file path>\n");
+        exit(-1);
+    }
+
+
+
     // sample data:
     vector<Point2d> sample;
     ifstream intputfile;
-    intputfile.open("../data/gaussian2d.csv");
+    intputfile.open(argv[2]);
     double x;
     double y;
     while(intputfile>>x>>y){
@@ -30,7 +37,7 @@ int main(){
 
     float* sample_x = new float[sample.size()];
     float* sample_y = new float[sample.size()];
-    for(int i = 0; i < sample.size(); ++i){
+    for(unsigned int i = 0; i < sample.size(); ++i){
         sample_x[i] = sample[i].x();
         sample_y[i] = sample[i].y();
     }
@@ -89,7 +96,7 @@ int main(){
 
     // Call cuda kernel
     int threadPerblock = 300;
-    int max_number_of_block = 300;
+    int max_number_of_block = atoi(argv[1]);
     
     CallKDE2dKernel(threadPerblock, max_number_of_block, dev_sample_x, dev_sample_y, sample.size(), dev_input_x, dev_input_y, dev_output, N, 10);
     
@@ -99,12 +106,14 @@ int main(){
 
     // output to file
     ofstream outfile;
-    outfile.open("../data/kde2d_gaussian2d.csv");
+    outfile.open("../data/kde2d_cuda_result.csv");
 
     for(int i = 0; i < N; ++i){
         outfile << input_x[i] << "," << input_y[i] << "," << output[i];
         outfile << "\n";
     }
+
+    cout << "the output result has been stored in ../data/kde2d_cuda_result.csv" << endl;
     return 0;
 }
 

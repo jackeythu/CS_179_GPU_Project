@@ -3,6 +3,7 @@
 #include <exception>
 #include <string>
 #include <iostream>
+#include <stdexcept>
 #include "kde1d.h"
 
 #define PI 3.141592653

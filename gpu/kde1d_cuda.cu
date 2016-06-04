@@ -69,21 +69,21 @@ void KDEadaptiveKernel(float* dev_sample, float* dev_estimate_sample, float* dev
 	// estimate inputs using adaptive version	
 	while(idx < len_data){
 		float sum_ker = 0;
-		register float dev_input_idx = dev_input[idx];
+		float dev_input_idx = dev_input[idx];
 		float lambda;
 		for(int i = 0; i < len_sample-1024; i = i + 1024){
 
-			for(int j = 0; j < 1024; ++j){
-				shr_sample[threadIdx.x + j] = dev_sample[j + (threadIdx.x+i)];
-				shr_estimate_sample[threadIdx.x + j] = dev_estimate_sample[j + (threadIdx.x+i)];
-			}
+			// store in shared memory
+			shr_sample[threadIdx.x] = dev_sample[threadIdx.x + i];
+			shr_estimate_sample[threadIdx.x] = dev_estimate_sample[threadIdx.x + i];
 
 			for(int j = 0; j < 1024; ++j){
-			lambda = powf(G/shr_estimate_sample[j + (threadIdx.x+i)], 0.5);
+			lambda = powf(G/shr_estimate_sample[j], 0.5);
 			sum_ker += kernel((dev_input_idx - shr_sample[j])/(bandwidth*lambda), kernel_type) /(bandwidth*lambda);
+			
 			}
 		}
-		dev_output[idx] = sum_ker/len_sample;
+		dev_output[idx] = sum_ker*1.0/len_sample;
 
 		idx += blockDim.x * gridDim.x;
 	}
@@ -96,9 +96,7 @@ void CallKDEKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_bloc
 
 
 void CallKDEadaptiveKernel(unsigned int threadsPerBlock, unsigned int max_Number_of_block, float* dev_sample, float* dev_estimate_sample, float* dev_input, float* dev_output, int len_sample, int len_data, float bandwidth, int kernel_type){
-printf("in call function before kernel\n");
 	KDEadaptiveKernel<<<max_Number_of_block, threadsPerBlock>>>(dev_sample, dev_estimate_sample, dev_input, dev_output, len_sample, len_data, bandwidth, kernel_type);
-printf("in call function after kernel\n");
 }
 
 
